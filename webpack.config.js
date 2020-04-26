@@ -1,36 +1,66 @@
-var path = require('path');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-
+const postcssNesting = require('postcss-nesting');
+const HtmlWebPackPlugin = require("html-webpack-plugin");
 module.exports = {
-    entry: './app/index.js',
+    entry: {
+        polyfill: 'babel-polyfill',
+        app: './src/index.js',
+    },
+    devtool: 'source-map',
+    devServer: {
+        historyApiFallback: true
+    },
     output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'index_bundle.js'
+        publicPath: '/'
     },
     module: {
         rules: [
             {
-                test: /\.(js)$/,
-                use: 'babel-loader'
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: "babel-loader"
+                }
+            },
+            {
+                test: /\.html$/,
+                use: [
+                    {
+                        loader: "html-loader",
+                        options: { minimize: true }
+                    }
+                ]
             },
             {
                 test: /\.css$/,
                 use: [
                     'style-loader',
+                    { loader: 'css-loader', options: { importLoaders: 1, modules: true, localIdentName: '[folder]__[local]--[hash:base64:5]' } },
                     {
-                        loader: 'css-loader',
-                        options: {
-                            importLoaders: 1
+                        loader: 'postcss-loader', options: {
+                            ident: 'postcss',
+                            plugins: () => [
+                                postcssNesting(/* pluginOptions */)
+                            ]
                         }
-                    },
-                    'postcss-loader']
+                    }
+                ]
+            },
+            {
+                test: /\.svg$/,
+                loader: 'raw-loader'
+            },
+            {
+                test: /\.(png|jpg|gif|mp3)$/,
+                use: [
+                    'file-loader'
+                ]
             }
         ]
     },
-    mode: 'development',
     plugins: [
-        new HtmlWebpackPlugin({
-            template: 'app/index.html'
+        new HtmlWebPackPlugin({
+            template: "./src/index.html",
+            filename: "./index.html"
         })
     ]
 }
